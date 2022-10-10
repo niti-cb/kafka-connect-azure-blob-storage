@@ -7,8 +7,13 @@ from constants import TOTAL
 
 BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', '').split(',')
 
-
 def get_topic_partitions(consumer, topic):
+    """
+    Method to get all the partitions of the topic
+    :param consumer:
+    :param topic:
+    :return:
+    """
     partition_names = consumer.partitions_for_topic(topic)
     if not partition_names:
         raise Exception('Topic partitions not found.')
@@ -17,8 +22,12 @@ def get_topic_partitions(consumer, topic):
 
 
 def get_topic_message_counts(topic):
+    """
+    Method to get count of messages that are published to the topic (partition wise)
+    :param topic:
+    :return:
+    """
     consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, request_timeout_ms=30000)
-    consumer.subscribe([topic])
     partitions = get_topic_partitions(consumer, topic)
     partition_offsets = consumer.end_offsets(partitions)
     consumer.close(autocommit=False)
@@ -28,6 +37,13 @@ def get_topic_message_counts(topic):
 
 
 def wait_until_consumption_stops(topic, consumer_group, timeout=900):
+    """
+    Method to wait for the consumer_group to finish consuming all messages from given topic
+    :param topic:
+    :param consumer_group:
+    :param timeout:
+    :return:
+    """
     admin = KafkaAdminClient(bootstrap_servers=BOOTSTRAP_SERVERS)
     groups = admin.list_consumer_groups()
     admin.close()
