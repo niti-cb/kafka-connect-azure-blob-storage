@@ -1,7 +1,7 @@
 import os
 from time import time, sleep
 
-from kafka import KafkaAdminClient, KafkaConsumer, TopicPartition
+from kafka import KafkaConsumer, TopicPartition
 
 from constants import TOTAL
 
@@ -44,12 +44,6 @@ def wait_until_consumption_stops(topic, consumer_group, timeout=900):
     :param timeout:
     :return:
     """
-    admin = KafkaAdminClient(bootstrap_servers=BOOTSTRAP_SERVERS)
-    groups = admin.list_consumer_groups()
-    admin.close()
-    if consumer_group not in dict(groups):
-        raise Exception('Consumer group not found.')
-
     consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, group_id=consumer_group, request_timeout_ms=30000)
     partitions = get_topic_partitions(consumer, topic)
 
