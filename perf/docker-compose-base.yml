@@ -1,0 +1,120 @@
+version: '2.2'
+
+networks:
+  kafka-network:
+    name: kafka-network
+    driver: bridge
+
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:3.7'
+    container_name: zookeeper
+    networks:
+      - kafka-network
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: 'yes'
+
+  kafka:
+    image: 'bitnami/kafka:3.1.0'
+    container_name: kafka
+    networks:
+      - kafka-network
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      KAFKA_CFG_NUM_NETWORK_THREADS: 3
+      KAFKA_CFG_NUM_IO_THREADS: 8
+      KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES: 102400
+      KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES: 102400
+      KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES: 104857600
+      KAFKA_CFG_LOG_DIRS: /tmp/kafka-logs
+      KAFKA_CFG_NUM_PARTITIONS: 1
+      KAFKA_CFG_NUM_RECOVERY_THREADS_PER_DATA_DIR: 1
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 18000
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_LISTENERS: CLIENT://:9092,EXTERNAL://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: CLIENT
+    restart: on-failure
+    healthcheck:
+      test: kafka-topics.sh --list --bootstrap-server kafka:9092 || exit 1
+      start_period: 2m
+      interval: 15s
+      timeout: 15s
+      retries: 3
+
+  schema-registry:
+    image: 'confluentinc/cp-schema-registry:7.0.1'
+    container_name: 'schema-registry'
+    networks:
+      - kafka-network
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8081"
+    environment:
+      CUB_CLASSPATH: '/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*:/usr/share/java/cp-base-new/*'
+      SCHEMA_REGISTRY_HOST_NAME: 'schema-registry'
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_LISTNERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: INFO
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: _schemas
+      SCHEMA_REGISTRY_DEBUG: 'true'
+
+  datagen:
+    build:
+      context: .
+      dockerfile: Dockerfile.datagen
+    container_name: 'datagen'
+    networks:
+      - kafka-network
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8084:8083"
+    environment:
+      GROUP_ID: 'datagen-group'
+      CONFIG_STORAGE_TOPIC: _connect-datagen-configs
+      OFFSET_STORAGE_TOPIC: _connect-datagen-offset
+      STATUS_STORAGE_TOPIC: _connect-datagen-status
+      BOOTSTRAP_SERVERS: 'kafka:9092'
+      ADVERTISED_HOST_NAME: 'datagen'
+      CONNECT_REST_PORT: 8083
+      KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      VALUE_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_PLUGIN_PATH: "/usr/share/java"
+      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
+    restart: always
+    healthcheck:
+      test: curl datagen:8083 || exit 1
+      start_period: 3m
+      interval: 15s
+      timeout: 15s
+      retries: 3
+
+  kafka-system-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.systemtest
+    container_name: 'kafka-test'
+    networks:
+      - kafka-network
+    environment:
+      AZURE_STORAGE_CONNECTION_STRING: $AZURE_STORAGE_CONNECTION_STRING
+      AZURE_CONTAINER: $AZURE_CONTAINER
+      KAFKA_BOOTSTRAP_SERVERS: 'kafka:9092'
+    command: tail -f /dev/null

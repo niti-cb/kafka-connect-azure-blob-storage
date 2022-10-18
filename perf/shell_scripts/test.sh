@@ -1,5 +1,10 @@
 #!/bin/bash
 
+export KAFKA_BOOTSTRAP_SERVERS="http://localhost:9093"
+export SOURCE_CONNECT="http://localhost:8084"
+export SINK_CONNECT="http://localhost:8083"
+export SCHEMA_REGISTRY="http://schema-registry:8081"
+
 alias prettyjson='python -m json.tool'
 
 SOURCE_JSON="{
@@ -35,7 +40,7 @@ SINK_JSON="{
 }"
 
 echo "Creating topic..."
-docker exec -it kafka bash -c "kafka-topics.sh --create --topic $TOPIC --partitions $PARTITIONS --bootstrap-server=$KAFKA_BOOTSTRAP_SERVERS"
+docker exec -it kafka kafka-topics.sh --create --topic $TOPIC --partitions $PARTITIONS --bootstrap-server=$KAFKA_BOOTSTRAP_SERVERS
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Creating source connector..."
@@ -69,7 +74,7 @@ if [ "$CHAOS" = true ] ; then
 fi
 
 echo "Waiting for consumer..."
-python -m python_scripts.wait_to_consume --topic=$TOPIC --consumer_group=$CONSUMER_GROUP
+docker exec -it kafka-test python -m python_scripts.wait_to_consume --topic=$TOPIC --consumer_group=$CONSUMER_GROUP
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Deleting connectors..."
@@ -83,7 +88,7 @@ sleep 60
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Running tests..."
-python -m python_scripts.run_tests --topic=$TOPIC --directory=$DIRECTORY
+docker exec -it kafka-test python -m python_scripts.run_tests --topic=$TOPIC --directory=$DIRECTORY
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Deleting topic..."

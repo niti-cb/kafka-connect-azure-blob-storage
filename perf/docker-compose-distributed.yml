@@ -1,0 +1,121 @@
+version: '2.2'
+
+networks:
+  kafka-network:
+    name: kafka-network
+    external: true
+
+services:
+  kafka-connect-01:
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
+    container_name: kafka-connect-01
+    networks:
+      - kafka-network
+    ports:
+      - "8083:8083"
+    volumes:
+      - ../target:/usr/share/java/plugins
+    environment:
+      GROUP_ID: 'kafka-connect-group'
+      CONFIG_STORAGE_TOPIC: _connect-configs
+      OFFSET_STORAGE_TOPIC: _connect-offset
+      STATUS_STORAGE_TOPIC: _connect-status
+      BOOTSTRAP_SERVERS: 'kafka:9092'
+      ADVERTISED_HOST_NAME: 'kafka-connect-01'
+      CONNECT_REST_PORT: 8083
+      KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      VALUE_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_PLUGIN_PATH: '/usr/share/java'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
+      CONNECT_SCHEDULED_REBALANCE_MAX_DELAY_MS: 5000
+    restart: always
+    healthcheck:
+      test: curl kafka-connect-01:8083 || exit 1
+      start_period: 3m
+      interval: 15s
+      timeout: 15s
+      retries: 3
+
+  kafka-connect-02:
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
+    container_name: kafka-connect-02
+    networks:
+      - kafka-network
+    ports:
+      - "18083:8083"
+    volumes:
+      - ../target:/usr/share/java/plugins
+    environment:
+      GROUP_ID: 'kafka-connect-group'
+      CONFIG_STORAGE_TOPIC: _connect-configs
+      OFFSET_STORAGE_TOPIC: _connect-offset
+      STATUS_STORAGE_TOPIC: _connect-status
+      BOOTSTRAP_SERVERS: 'kafka:9092'
+      ADVERTISED_HOST_NAME: 'kafka-connect-02'
+      CONNECT_REST_PORT: 8083
+      KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      VALUE_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_PLUGIN_PATH: '/usr/share/java'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
+      CONNECT_SCHEDULED_REBALANCE_MAX_DELAY_MS: 5000
+    restart: always
+    healthcheck:
+      test: curl kafka-connect-02:8083 || exit 1
+      start_period: 3m
+      interval: 15s
+      timeout: 15s
+      retries: 3
+
+  kafka-connect-03:
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
+    container_name: kafka-connect-03
+    networks:
+      - kafka-network
+    ports:
+      - "28083:8083"
+    volumes:
+      - ../target:/usr/share/java/plugins
+    environment:
+      GROUP_ID: 'kafka-connect-group'
+      CONFIG_STORAGE_TOPIC: _connect-configs
+      OFFSET_STORAGE_TOPIC: _connect-offset
+      STATUS_STORAGE_TOPIC: _connect-status
+      BOOTSTRAP_SERVERS: 'kafka:9092'
+      ADVERTISED_HOST_NAME: 'kafka-connect-03'
+      CONNECT_REST_PORT: 8083
+      KEY_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      VALUE_CONVERTER: 'org.apache.kafka.connect.storage.StringConverter'
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_PLUGIN_PATH: '/usr/share/java'
+      CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
+      CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
+      CONNECT_SCHEDULED_REBALANCE_MAX_DELAY_MS: 5000
+    restart: always
+    healthcheck:
+      test: curl kafka-connect-03:8083 || exit 1
+      start_period: 3m
+      interval: 15s
+      timeout: 15s
+      retries: 3
