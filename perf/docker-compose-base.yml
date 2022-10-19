@@ -74,6 +74,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.datagen
+    image: perf/datagen
+    pull_policy: never
     container_name: 'datagen'
     networks:
       - kafka-network
@@ -96,6 +98,7 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
       CONNECT_PLUGIN_PATH: "/usr/share/java"
+      HEAP_OPTS: '-Xmx512M -Xms512M'
       CONNECT_LOG4J_ROOT_LOGLEVEL: 'INFO'
       CONNECT_LOG4J_LOGGERS: 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR'
     restart: always
@@ -110,7 +113,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.systemtest
-    container_name: 'kafka-test'
+    image: perf/kafka-system-test
+    pull_policy: never
+    container_name: 'kafka-system-test'
     networks:
       - kafka-network
     environment:

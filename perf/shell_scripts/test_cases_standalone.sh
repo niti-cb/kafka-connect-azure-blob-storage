@@ -15,7 +15,7 @@ export SINK_CONNECTOR_NAME="json-sink-standalone"
 export CONSUMER_GROUP="connect-$SINK_CONNECTOR_NAME"
 export VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter"
 
-#sh ./shell_scripts/test.sh
+sh ./shell_scripts/test.sh
 echo "============================================================================================================================="
 
 echo "\n"

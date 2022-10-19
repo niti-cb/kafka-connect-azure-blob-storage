@@ -5,7 +5,15 @@ export SOURCE_CONNECT="http://localhost:8084"
 export SINK_CONNECT="http://localhost:8083"
 export SCHEMA_REGISTRY="http://schema-registry:8081"
 
-alias prettyjson='python -m json.tool'
+if type "jq" &> /dev/null; then
+  alias prettyjson="jq ."
+elif type "python" &> /dev/null; then
+  alias prettyjson="python -m json.tool"
+elif type "python3" &> /dev/null; then
+    alias prettyjson="python3 -m json.tool"
+else
+  alias prettyjson="cat"
+fi
 
 SOURCE_JSON="{
   \"name\": \"$SOURCE_CONNECTOR_NAME\",
@@ -74,7 +82,7 @@ if [ "$CHAOS" = true ] ; then
 fi
 
 echo "Waiting for consumer..."
-docker exec -it kafka-test python -m python_scripts.wait_to_consume --topic=$TOPIC --consumer_group=$CONSUMER_GROUP
+docker exec -it kafka-system-test python -m python_scripts.wait_to_consume --topic=$TOPIC --consumer_group=$CONSUMER_GROUP
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Deleting connectors..."
@@ -88,7 +96,7 @@ sleep 60
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Running tests..."
-docker exec -it kafka-test python -m python_scripts.run_tests --topic=$TOPIC --directory=$DIRECTORY
+docker exec -it kafka-system-test python -m python_scripts.run_tests --topic=$TOPIC --directory=$DIRECTORY
 echo "-----------------------------------------------------------------------------------------------------------------------------"
 
 echo "Deleting topic..."
