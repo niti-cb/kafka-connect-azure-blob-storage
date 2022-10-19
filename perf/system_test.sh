@@ -4,6 +4,7 @@ source .env.systemtest
 
 docker-compose -f docker-compose-base.yml up -d --wait
 if [ "$?" -ne 0 ]; then
+  docker-compose -f docker-compose-base.yml down
   exit
 fi
 

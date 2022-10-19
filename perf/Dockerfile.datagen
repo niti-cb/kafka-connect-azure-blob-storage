@@ -9,5 +9,3 @@ RUN curl -O https://api.hub.confluent.io/api/plugins/confluentinc/kafka-connect-
 RUN unzip -d /usr/share/java confluentinc-kafka-connect-avro-converter-7.2.2.zip
 
 RUN curl -o /usr/share/java/confluentinc-kafka-connect-avro-converter-7.2.2/lib/guava-11.0.2.jar -O https://repo1.maven.org/maven2/com/google/guava/guava/11.0.2/guava-11.0.2.jar
-
-
